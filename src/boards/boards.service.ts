@@ -1,43 +1,37 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Board } from './board.model';
-import { v4 as uuidv4 } from 'uuid';
+import { Injectable } from '@nestjs/common';
 import { CreateBoardDTO } from './dto/create-board.dto';
-import type { BoardStatus } from './board.model';
+import type { BoardStatus } from './board-status';
+import { BoardRepository } from './board.repository';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Board } from './board.entity';
 @Injectable()
 export class BoardsService {
-  private boards: Board[] = [];
+  constructor(
+    @InjectRepository(BoardRepository)
+    private boardRepository: BoardRepository,
+  ) {}
 
-  getAllBoards(): Board[] {
-    return this.boards;
+  createBoard(createBoardDto: CreateBoardDTO): Promise<Board> {
+    return this.boardRepository.createBoard(createBoardDto);
   }
 
-  createBoard({ title, description }: CreateBoardDTO) {
-    const board: Board = {
-      id: uuidv4(),
-      title,
-      description,
-      status: 'PUBLIC',
-    };
-
-    this.boards.push(board);
-    return board;
+  getBoardById(id: number): Promise<Board> {
+    return this.boardRepository.getBoardById(id);
   }
 
-  getBoardById(id: string): Board {
-    const board = this.boards.find((board) => board.id === id);
-    if (!board) throw new NotFoundException(`cannot find Board with id: ${id}`);
-
-    return board;
+  deleteBoard(id: number): Promise<void> {
+    return this.boardRepository.deleteBoard(id);
   }
 
-  deleteBoard(id: string): void {
-    const toBeDeleted = this.getBoardById(id);
-    this.boards = this.boards.filter((board) => board.id !== toBeDeleted.id);
-  }
-
-  updateBoardStatus(id: string, status: BoardStatus): Board {
-    const board = this.getBoardById(id);
+  async updateBoard(id: number, status: BoardStatus): Promise<Board> {
+    const board = await this.getBoardById(id);
     board.status = status;
+    this.boardRepository.updateBoardStatus(board);
+
     return board;
+  }
+
+  getAllBoards(): Promise<Board[]> {
+    return this.boardRepository.getAllBoards();
   }
 }

@@ -1,11 +1,12 @@
 import {
   ConflictException,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { EntityRepository, Repository } from 'typeorm';
 import { AuthCredentialsDTO } from './dto/auth-credential.dto';
 import { User } from './user.entity';
-import { genSalt, hash } from 'bcryptjs';
+import { genSalt, hash, compare } from 'bcryptjs';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
@@ -21,6 +22,17 @@ export class UserRepository extends Repository<User> {
       if (error.code === '23505')
         throw new ConflictException('Existing userName');
       else throw new InternalServerErrorException();
+    }
+  }
+
+  async singIn(authCredentialsDto: AuthCredentialsDTO): Promise<string> {
+    const { username, password } = authCredentialsDto;
+    const user = await this.findOne({ username });
+
+    if (user && (await compare(password, user.password))) {
+      return 'login success';
+    } else {
+      throw new UnauthorizedException('login failed');
     }
   }
 }

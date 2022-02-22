@@ -1,4 +1,3 @@
-import { BoardStatus } from 'src/boards/board-status';
 import {
   BaseEntity,
   Column,

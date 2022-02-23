@@ -25,12 +25,15 @@ export class UserRepository extends Repository<User> {
     }
   }
 
-  async singIn(authCredentialsDto: AuthCredentialsDTO): Promise<string> {
+  async singIn(
+    authCredentialsDto: AuthCredentialsDTO,
+    accessToken: string,
+  ): Promise<{ accessToken: string }> {
     const { username, password } = authCredentialsDto;
     const user = await this.findOne({ username });
 
     if (user && (await compare(password, user.password))) {
-      return 'login success';
+      return { accessToken };
     } else {
       throw new UnauthorizedException('login failed');
     }

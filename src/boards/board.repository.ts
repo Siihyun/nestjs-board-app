@@ -1,16 +1,21 @@
 import { NotFoundException } from '@nestjs/common';
+import { User } from 'src/auth/user.entity';
 import { EntityRepository, Repository } from 'typeorm';
 import { Board } from './board.entity';
 import { CreateBoardDTO } from './dto/create-board.dto';
 
 @EntityRepository(Board)
 export class BoardRepository extends Repository<Board> {
-  async createBoard(createBoardDto: CreateBoardDTO): Promise<Board> {
+  async createBoard(
+    createBoardDto: CreateBoardDTO,
+    user: User,
+  ): Promise<Board> {
     const { title, description } = createBoardDto;
     const board = this.create({
       title,
       description,
       status: 'PUBLIC',
+      user,
     });
 
     await this.save(board);
